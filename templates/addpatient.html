@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="Bootstrap Admin App + jQuery">
+    <meta name="keywords" content="app, responsive, jquery, bootstrap, dashboard, admin">
+    <title>MalariaLab</title>
+    <!-- =============== VENDOR STYLES ===============-->
+    <!-- FONT AWESOME-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/font-awesome.min.css') }}">
+    <!-- SIMPLE LINE ICONS-->
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='vendor/simple-line-icons/css/simple-line-icons.css') }}">
+    <!-- ANIMATE.CSS-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/animate.css/animate.min.css') }}">
+    <!-- WHIRL (spinners)-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/whirl/dist/whirl.css') }}">
+    <!-- SWEETALERT -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/sweetalert/dist/sweetalert.css') }}">
+    <!-- DATATABLES -->
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='vendor/datatables-colvis/css/dataTables.colVis.css') }}">
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='vendor/datatables/media/css/dataTables.bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/dataTables.fontAwesome/index.css') }}">
+    <!-- =============== BOOTSTRAP STYLES ===============-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='app/css/bootstrap.css') }}" id="bscss">
+    <!-- =============== APP STYLES ===============-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='app/css/app.css') }}" id="maincss">
+</head>
+
+<body class="layout-h">
+    <div class="wrapper">
+        <!-- top navbar-->
+        <header class="topnavbar-wrapper">
+            <!-- START Top Navbar-->
+            <nav role="navigation" class="navbar topnavbar">
+                <!-- START navbar header-->
+                <div class="navbar-header">
+                    <a href="/dashboard" class="navbar-brand">
+                        <div class="brand-logo" style="font-size: 22px;">
+                            <i class="fa fa-h-square"></i> Dashboard
+                        </div>
+                        <!-- <div class="brand-logo-collapsed">
+                     <i class="fa fa-user-md"></i>
+                  </div> -->
+                    </a>
+                </div>
+                <!-- END navbar header-->
+                <!-- START Nav wrapper-->
+                <div class="nav-wrapper">
+
+                </div>
+                <!-- END Nav wrapper-->
+            </nav>
+            <!-- END Top Navbar-->
+        </header>
+        <!-- sidebar-->
+
+        <!-- Main section-->
+        <section>
+            <!-- Page content-->
+            <div class="content-wrapper">
+                <div class="content-heading">
+                    <!-- START Language list-->
+
+                    <!-- END Language list    -->
+                    <i class="fa fa-wheelchair"></i> Manage Patient Records
+                    <small data-localize="dashboard.WELCOME"></small>
+                    <div class="pull-right">
+                        <div class="btn-group">
+                            <button style="bottom: 27px; border-radius:0%;" id="addpatient"
+                                class="mb-sm btn btn-primary" type="button"
+                                onclick="window.location.href='/patient'">
+                                View Patient
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel panel-default" style="padding: 15px;">
+
+                            <div class="modal-body">
+                                <!-- Start Services -->
+                                <div id="services" class="services-box">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="title-box">
+                                                    <p>Upload your blood cell images and check your result of infection
+                                                        in easy steps</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="btnBlock">
+                                            <form action="/predict" method="post" enctype="multipart/form-data">
+                                                <label for="file" class="upload-label"></label>
+                                                <input type="file" name="file" id="file" accept=".png, .jpg, .jpeg"
+                                                    style="display: none;">
+                                                <input type="button" id="btnOpenFileDialog" value="Choose Image"
+                                                    onclick="openfileDialog()">
+                                                <button id="btnCheckResult" onclick="run()">Check Result</button>
+                                            </form>
+                                        </div>
+                                        <div class="float-container">
+                                            <div class="image-Pre" id="imgPre">
+                                                <img src="" alt="Image Preview" class="image-Pre-img" id="output_image">
+                                                <span class="image-Pre-Txt">Image Preview Block</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script
+                                        src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.0.0/tf.min.js"></script>
+                                    <script>
+                                        const fileInput = document.getElementById("file");
+                                        const previewContainer = document.getElementById("imgPre");
+                                        const previewImage = previewContainer.querySelector(".image-Pre-img");
+                                        const previewText = previewContainer.querySelector(".image-Pre-Txt");
+
+                                        fileInput.addEventListener("change", function () {
+                                            const file = this.files[0];
+
+                                            if (file) {
+                                                const reader = new FileReader();
+
+                                                previewText.style.display = "none";
+                                                previewImage.style.display = "Block";
+
+                                                reader.addEventListener("load", function () {
+                                                    console.log(this);
+                                                    previewImage.setAttribute("src", this.result);
+                                                });
+
+                                                reader.readAsDataURL(file);
+                                            } else {
+                                                previewImage.style.display = null;
+                                                previewText.style.display = null;
+                                            }
+                                        });
+
+                                        function openfileDialog() {
+                                            $("#file").click();
+                                        }
+
+                                        async function run() {
+                                            const MODEL_URL = 'http://127.0.0.1:8887/model.json';
+                                            const model = await tf.loadLayersModel(MODEL_URL);
+                                            console.log(model.summary());
+                                            let image = document.getElementById('output_image');
+                                            console.log(image);
+                                            let tensorImg = tf.browser.fromPixels(image).resizeNearestNeighbor([120, 120]).toFloat().expandDims();
+
+                                            result = await model.predict(tensorImg).data();
+                                            console.log(result);
+
+                                            if (result > 0.88) {
+                                                console.log("It's infected");
+                                                document.getElementById("resultText").innerHTML = "Infected";
+                                                document.getElementById("resultPre").style.borderColor = "red";
+                                                document.getElementById("resultPre").style.color = 'red';
+                                                document.getElementById("Smile").src = "{{ url_for('static', filename='images/bad.png') }}";
+                                            } else {
+                                                console.log("It's Uninfected");
+                                                document.getElementById("resultText").innerHTML = "Uninfected";
+                                                document.getElementById("resultPre").style.borderColor = "green";
+                                                document.getElementById("resultPre").style.color = '#00cb86';
+                                                document.getElementById("Smile").src = "{{ url_for('static', filename='images/good.png') }}";
+                                            }
+                                        }
+                                    </script>
+                                </div>
+                                <!-- End Services -->
+                                <form action="/addpatient" method="post" data-parsley-validate="" novalidate="" class="form-horizontal" id="detailform">
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">First Name</label>
+                                        <div class="col-lg-10">
+                                            <input required type="text" name="fname" class="form-control"
+                                                placeholder="First Name">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Last name</label>
+                                        <div class="col-lg-10">
+                                            <input required type="text" name="lname" class="form-control"
+                                                placeholder="Last name">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Insurance No</label>
+                                        <div class="col-lg-10">
+                                            <input required type="text" name="insurance" class="form-control"
+                                                placeholder="Insurance No">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Phone Number</label>
+                                        <div class="col-lg-10">
+                                            <input required name="phone" type="number" class="form-control"
+                                                placeholder="Phone Number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-lg-2 control-label">Result</label>
+                                        <div class="col-lg-10">
+                                            <input required type="text" name="result" class="form-control"
+                                                placeholder="Insurance No" value="{{ result }}">
+                                        </div> 
+                                    </div>
+                                    <!-- Submit Button -->
+                                    <div class="form-group">
+                                        <div class="col-lg-offset-2 col-lg-10">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Page footer-->
+        <footer>
+            <Center><span>&copy; 2024 - MalariaLab</span></Center>
+        </footer>
+    </div>
+    <!-- =============== VENDOR SCRIPTS ===============-->
+    <!-- MODERNIZR-->
+    <script src="{{ url_for('static', filename='vendor/modernizr/modernizr.custom.js') }}"></script>
+    <!-- JQUERY-->
+    <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.js') }}"></script>
+    <!-- BOOTSTRAP-->
+    <script src="{{ url_for('static', filename='vendor/bootstrap/dist/js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables-colvis/js/dataTables.colVis.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/media/js/dataTables.bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/serialize/jquery.serializejson.js') }}"></script>
+    <!-- STORAGE API-->
+    <script src="{{ url_for('static', filename='vendor/jQuery-Storage-API/jquery.storageapi.js') }}"></script>
+    <!-- JQUERY EASING-->
+    <script src="{{ url_for('static', filename='vendor/jquery.easing/js/jquery.easing.js') }}"></script>
+    <!-- ANIMO-->
+    <script src="{{ url_for('static', filename='vendor/animo.js/animo.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/parsley/parsley.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/sweetalert/dist/sweetalert.min.js') }}"></script>
+    <!-- LOCALIZE-->
+    <script src="{{ url_for('static', filename='vendor/jquery-localize-i18n/dist/jquery.localize.js') }}"></script>
+    <!-- =============== PAGE VENDOR SCRIPTS ===============-->
+    <!-- =============== APP SCRIPTS ===============-->
+    <script src="{{ url_for('static', filename='app/js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/patient.js') }}"></script>
+</body>
+
+</html>
